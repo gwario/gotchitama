@@ -1,10 +1,13 @@
 require mini-oof.fs
+require gt-io.fs
+require gt-iconst.fs
+require gt-misc.fs
 
 \ create word list
 wordlist constant gotchitama
 
 \ put our word list on top of the search order
-get-order gotchitama swap 1+ set-order
+get-order ( addr-n .. addr-n-i .. addr-0 n ) gotchitama ( addr-n .. addr-n-i .. addr-0 n addr-gt) swap 1+ set-order ( <0> )
 
 \ Set current word list to gotchitama
 gotchitama set-current
@@ -12,20 +15,52 @@ gotchitama set-current
 \ Write our words
 
 object class
-   \ health points: 0-100
-   cell var health
-   \ maths skills: 0-100
-   cell var maths
-   cell var happiness
+   cell var health                     \ health points: 0-100 default: 100
+   \ cell var maths                       \ maths skills: 0-100
+   \ cell var happiness
+   method init ( o -- )                \ initializes vital values
+   method feed ( food o -- )           \ feeds the gotchitama
+   method get-health ( o -- health )   \ puts the health onto the stack
 end-class gotchitama
+
+\ initializes vital values with the defaults
+:noname ( o -- ) >r ( -- )
+   100 r> health !
+; gotchitama defines init
+
+\ feeds the gotchitama
+:noname ( food o -- ) >r ( food -- ) 
+   r@ health @ + ( food+health -- ) r> health ! ( -- )
+; gotchitama defines feed
+
+\ puts the health on top of the stack
+:noname ( o -- health )
+   health @ ( health )
+; gotchitama defines get-health
 
 
 \ takes some "genes" parameters like cleverness from stack and creates an according gotchitama
-\ : create-gotchi
+\ : create-gotchi ( addr u -- addr ) ( name -- gotchitama )
 
 \ create a gotchitama with random "genes"
-\ : create-random-gotchi
+\ : create-random-gotchi \ mga: what are these genes?
    
 
+\ just for debugging....
 
+cr cr 
+gotchitama new constant anton
+anton init
+s" created a new gotchitama named anton" log
 
+cr cr
+gotchitama new interactive-constant
+interactive-gotchitama init
+s" created a new gotchitama named " pad place constant$ constant-len @ pad +place pad count log
+
+\ prints information on the given gotchitama's vital values
+: status ( o -- ) cr
+   ." Health: " get-health . cr
+;
+
+2500 ms page
