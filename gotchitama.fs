@@ -54,23 +54,25 @@ anton init
 s" created a new gotchitama named anton" log
 
 \ Creates a constant of a name stored in addr of length u
-\ : <constant ( addr u -- ) name-too-short? header, reveal docon: cfa, , ;
+ : <constant ( addr u -- ) name-too-short? header, reveal docon: cfa, , ;
 
 cr cr
 ." Enter your gotchitama's name: " 
-gotchitama new interactive-constant
+\ gotchitama new interactive-constant
 
-\ create constant-len 2 cells allot
-\ create constant$
+create constant-len 
+create constant$ 
 
 
-\ : get-name pad pad 80 accept 
-\     dup constant-len ! \ remember the length of the user-input
-\     constant-len @ cells allot \ create a buffer for the constant
-\     pad constant$ constant-len @ move \ move the user input to the buffer
-\    cr ;
+ : get-name pad pad 80 accept 
+     dup constant-len ! \ remember the length of the user-input
 
-\ gotchitama new get-name \ <constant 
+     \ the next line is evil:
+     \ constant-len @ allot \ create a buffer for the constant
+     pad constant$ constant-len @ move \ move the user input to the buffer
+    cr ;
+
+ gotchitama new get-name <constant 
  s" created a new gotchitama named " pad place constant$ constant-len @ pad +place pad count log
 
 \ interactive-gotchitama init
