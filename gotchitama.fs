@@ -53,9 +53,6 @@ gotchitama new constant anton
 anton init
 s" created a new gotchitama named anton" log
 
-\ Creates a constant of a name stored in addr of length u
- : <constant ( addr u -- ) name-too-short? header, reveal docon: cfa, , ;
-
 cr cr
 ." Enter your gotchitama's name: " 
 \ gotchitama new interactive-constant
@@ -64,16 +61,17 @@ create constant-len
 create constant$ 
 
 
- : get-name pad pad 80 accept 
-     dup constant-len ! \ remember the length of the user-input
+: get-name pad pad 80 accept 
+    dup constant-len ! \ remember the length of the user-input
 
-     \ the next line is evil:
-     \ constant-len @ allot \ create a buffer for the constant
-     pad constant$ constant-len @ move \ move the user input to the buffer
-    cr ;
+    \ the next line is evil:
+    \ constant-len @ allot \ create a buffer for the constant
+    pad constant$ constant-len @ move \ move the user input to the buffer
+   cr ;
 
- gotchitama new get-name <constant 
- s" created a new gotchitama named " pad place constant$ constant-len @ pad +place pad count log
+ gotchitama new get-name ' constant execute-parsing \ execute-parsing takes the xt from a parsing word from stack and executes it using the stack instead of the input stream
+ \ s" created a new gotchitama named " pad place constant$ constant-len @ pad +place pad count log
+ s" created a new gotchitama named " pad place latest name>string pad +place pad count log
 
 \ interactive-gotchitama init
 \ s" created a new gotchitama named " pad place constant$ constant-len @ pad +place pad count log
