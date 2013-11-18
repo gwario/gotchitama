@@ -16,69 +16,69 @@ gotchitama set-current
 
 object class
    cell var health                     \ health points: 0-100 default: 100
+   cell var name  
+   cell var len
+   cell var time
    \ cell var maths                       \ maths skills: 0-100
    \ cell var happiness
    method init ( o -- )                \ initializes vital values
    method feed ( food o -- )           \ feeds the gotchitama
    method get-health ( o -- health )   \ puts the health onto the stack
+   method status ( o -- )
 end-class gotchitama
 
+\ This word will be compiled into every method
+\ It should alter the variables considering the time since last action
+: update ( o -- o ) >r
+   r@ health @ 5 - r@ health ! r> ; \ TODO: make change dependent on time
+
+\ Extends the mini-oof. Use :method instead of :noname if you want to
+\ define a word which should auto-update the state of the gotchitama first
+\ Uses trick similar to http://www.complang.tuwien.ac.at/forth/gforth/Docs-html/User_002ddefined-Defining-Words.html#User_002ddefined-Defining-Words
+: :method :noname ['] update compile, ;
+
 \ initializes vital values with the defaults
-:noname ( o -- ) >r ( -- )
-   100 r> health !
+:noname ( addr u o -- ) >r ( -- )
+  100 r@ health ! \ set health
+  r@ len ! \ set name length
+  get-timestamp r@ time ! \ set timestamp
+  r> name ! \ set name
 ; gotchitama defines init
 
-\ feeds the gotchitama
-:noname ( food o -- ) >r ( food -- ) 
-   r@ health @ + ( food+health -- ) r> health ! ( -- )
-; gotchitama defines feed
-
 \ puts the health on top of the stack
-:noname ( o -- health )
+:method ( o -- health )
    health @ ( health )
 ; gotchitama defines get-health
 
+\ feeds the gotchitama
+:method ( food o -- ) >r ( food -- ) 
+   r@ health @ + ( food+health -- ) r> health ! ( -- )
+; gotchitama defines feed
 
-\ takes some "genes" parameters like cleverness from stack and creates an according gotchitama
-\ : create-gotchi ( addr u -- addr ) ( name -- gotchitama )
-
-\ create a gotchitama with random "genes"
-\ : create-random-gotchi \ mga: what are these genes?
-   
+\ Print information on the status of the gotchitama
+:method ( o -- ) cr ." Health:  " health @ . cr ; gotchitama defines status
 
 \ just for debugging....
 
-cr cr 
-gotchitama new constant anton
-anton init
-s" created a new gotchitama named anton" log
+\ cr cr 
+\ gotchitama new constant anton
+\  s" Anton" anton init
+\ s" created a new gotchitama named anton" log
 
-cr cr
-." Enter your gotchitama's name: " 
-\ gotchitama new interactive-constant
+: ask-name ( c-addr -- c-addr u )
+    ." Enter your gotchitama's name (5-10 characters): " dup 10 accept
+    dup 10 > if s" gotchitama name too long" exception throw endif 
+    dup 5 < if s" gotchitama name too short" exception throw endif ;
 
-create constant-len 
-create constant$ 
+: log-creation ( o -- )
+    >R s" Created a new gotchitama named " pad place R@ name @ R> len @ pad +place pad count log ;
+
+: create-gotchi ( -- )
+    pad ask-name gotchitama new dup >R -rot  ['] constant execute-parsing ( )
+    latest name>string r@ init
+    R> log-creation ;
 
 
-: get-name pad pad 80 accept 
-    dup constant-len ! \ remember the length of the user-input
+\ 2500 ms page
 
-    \ the next line is evil:
-    \ constant-len @ allot \ create a buffer for the constant
-    pad constant$ constant-len @ move \ move the user input to the buffer
-   cr ;
-
- gotchitama new get-name ' constant execute-parsing \ execute-parsing takes the xt from a parsing word from stack and executes it using the stack instead of the input stream
- \ s" created a new gotchitama named " pad place constant$ constant-len @ pad +place pad count log
- s" created a new gotchitama named " pad place latest name>string pad +place pad count log
-
-\ interactive-gotchitama init
-\ s" created a new gotchitama named " pad place constant$ constant-len @ pad +place pad count log
-
-\ prints information on the given gotchitama's vital values
-: status ( o -- ) cr
-   ." Health: " get-health . cr
-;
-
-2500 ms page
+create-gotchi
