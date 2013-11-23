@@ -126,11 +126,11 @@ end-class gotchitama
     r@ ( c-addr u o | o ) init \ call init on o
     R> log-creation ;
 
-\ create-gotchi
+create-gotchi
 
 \ just for debugging....
 
 \ cr cr 
-gotchitama new constant anton
-s" anton" anton init
-s" created a new gotchitama named anton" log
+\ gotchitama new constant anton
+\ s" anton" anton init
+\ s" created a new gotchitama named anton" log
