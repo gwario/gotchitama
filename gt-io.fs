@@ -18,18 +18,15 @@
    27 emit ." [1;32m"
 ;
 
+: color-red ( -- )
+   27 emit ." [1;31m"
+;
+
 \ changes the font format using ansi control characters
 \ resets to normal
 : font-normal ( -- )
    27 emit ." [0m"
 ;
-
-\ prints n spaces
-\ : spaces ( n -- )
-\   0 ( n 0 ) ?do
-\      space
-\   loop
-\ ;
 
 \ calculates the character offset to a align a given text to right half of the terminal
 : align-right-half ( -- )
@@ -59,6 +56,7 @@
 
 \ prints a special formated text as a log message
 : log ( addr u -- )
+   cr
    color-green
    term-width 2 / offset-type
    font-normal
