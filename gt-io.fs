@@ -67,7 +67,57 @@
 
 \ saves the given gotchitama's state to a file.
 : gotchitama-save ( o -- )
-
-
 ;
+
+\ Following taken from ProgrammingForth.pdf, pp 83
+\ work in progress
+0 value pData
+0 value /Data
+0 value hData
+
+: FILE-CHECK ( n -- )
+    ABORT" File Access Error " ;
+
+: rewind-file ( file-id -- ior ) 0 0 rot reposition-file ;
+
+: MEMORY-CHECK ( n -- ) ABORT" Memory Allocation Error " ;
+
+
+: InitReadFile ( handle -- size )
+    dup rewind-file file-check
+    file-size file-check drop ;
+
+: OpenMouth ( caddr len -- )
+    r/o open-file file-check dup to hData
+    InitReadFile to /Data ;
+
+: slurp ( file-id -- addr len )
+    dup InitReadFile
+    dup allocate memory-check
+    dup to pData dup >r swap rot \ --
+    read-file file-check
+    r> swap ;
+
+
+: InitReadFile ( handle -- size )
+    dup rewind-file file-check
+    file-size file-check drop
+    ;
+
+: BURP pData free memory-check ;
+
+: Spit ( caddr len name namelen -- )
+    r/w create-file throw >r
+    r@ write-file throw
+    r> close-file throw ;
+
+0 Value fd-in
+: open-input ( addr u -- )  r/o open-file throw to fd-in ;
+
+: save ertl 5 cells s" ~/outputbla " spit ; 
+: load s" ~/outputbla " r/o Bin open-file drop ;
+
+
+
+
 
