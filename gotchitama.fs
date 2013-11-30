@@ -16,7 +16,7 @@ gotchitama set-current
 object class
    cell var health                     \ health points: 0-100 default: 100
    cell var happiness                  \ happiness points: 0-100 default: 100
-   cell var name                       \ pointer to the name of the gotchitama
+   2 cells var name                       \ pointer to the name of the gotchitama
    cell var len                        \ length of the name
    cell var time-of-last-interaction   \ the time of the last interaction with the gotchitama
    cell var birthtime                  \ the time of birth in micro seconds since epoch
@@ -45,11 +45,11 @@ end-class gotchitama
 
 \ types the name
 : type-name ( o -- addr u ) >r
-  r@ name @ r> len @ type
+  r@ name r> len @ type
 ;
 \ puts the name onto the stack
 : get-name ( o -- addr u ) >r
-  r@ name @ r> len @
+  r@ name r> len @
 ;
 
 \ checks whether or not gotchitama is still alive
@@ -70,8 +70,9 @@ end-class gotchitama
 :noname ( addr u o -- ) >r ( )
   100 r@ health ! \ set health
   100 r@ happiness ! \ set happiness
+  dup
   r@ len ! \ set name length
-  r@ name ! \ set name
+  ( addr u ) chars r@ name swap move \ set name
   get-timestamp r@ birthtime ! \ set the time of birth
   get-timestamp r> time-of-last-interaction ! \ set timestamp
 ; gotchitama defines init
@@ -124,7 +125,7 @@ end-class gotchitama
     gotchitama new ( c-addr u o ) dup >R -rot ( o c-addr u | o ) ['] constant ( o c-addr u xt-constant | o ) execute-parsing ( | o ) \ o c-addr u xt-constant execute-parsing == 0 constant <user-input>
     latest ( nt-<user-input> | o ) name>string ( c-addr u | o )
     r@ ( c-addr u o | o ) init \ call init on o
-    R> log-creation ;
+    R>  log-creation ;
 
 create-gotchi
 
