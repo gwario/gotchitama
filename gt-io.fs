@@ -64,20 +64,32 @@
 ;
 
 
+\ SERIALIZATION 
 
-\ saves the given gotchitama's state to a file.
-: gotchitama-save ( o -- )
-;
-
-: save ( caddr len name namelen -- )
-    r/w create-file throw >r
-    r@ write-file throw
-    r> close-file throw ;
+7 cells constant gotchisize \ the size in bytes of gotchitama information that gets serialized
+Create gotchibuffer gotchisize allot 
+: gotchifile s\" ~/output" ;
 
 0 Value fd-in
 : open-input ( addr u -- )  r/o open-file throw to fd-in ;
 : close-input ( -- )  fd-in close-file throw ;
 
-Create gotchibuffer 56 allot
-: load-gotchi s" /home/greg/output" open-input gotchibuffer 56 fd-in read-line throw close-input ;
-: save-gotchi ( o -- ) cell + 7 cells s" /home/greg/output" save ;
+\ save len bytes from caddr to filename
+: save ( caddr len filename filenamelen -- )
+    r/w create-file throw >r
+    r@ write-file throw
+    r> close-file throw ;
+
+: import-gotchi ( o -- ) >r
+    gotchibuffer 2 cells + ( name-addr ) gotchibuffer 4 cells + @ ( name-addr name-len )
+    r@ -rot ( o name-addr name-len )
+    ['] constant execute-parsing ( -- )
+    gotchibuffer r> cell + gotchisize move ; 
+
+\ Takes a "gotchitama new" as the first argument o
+\ This is necessary as we only import the instance variable data and not the other necessary information of a gotchitama instance as the definition/offset of methods.
+: load-gotchi ( o c-addr u ) open-input gotchibuffer gotchisize fd-in read-line throw close-input 2drop import-gotchi ;
+: save-gotchi ( name namelen caddr -- ) cell + ( name namelen caddr ) gotchisize ( name namelen caddr len ) 2swap save ;
+
+\ save a gotchitama: <file> <gotchitama> save-gotchi (zB gotchifile ertl save-gotchi)
+\ load a gotchi: gotchitama new <file> load-gotchi (zB gotchitama new gotchifile load-gotchi)
