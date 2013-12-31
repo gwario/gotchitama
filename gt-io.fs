@@ -81,7 +81,7 @@ Create gotchibuffer gotchisize allot
     r> close-file throw ;
 
 : import-gotchi ( o -- ) >r
-    gotchibuffer 2 cells + ( name-addr ) gotchibuffer 4 cells + @ ( name-addr name-len )
+    gotchibuffer 2 cell+ ( name-addr ) gotchibuffer 4 cell+ @ ( name-addr name-len )
     r@ -rot ( o name-addr name-len )
     ['] constant execute-parsing ( -- )
     gotchibuffer r> cell + gotchisize move ; 

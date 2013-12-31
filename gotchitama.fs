@@ -2,12 +2,13 @@ require mini-oof.fs
 require gt-io.fs
 require gt-misc.fs
 
+true constant DEBUG
+
 \ create word list
 wordlist constant gotchitama
 
 \ put our word list on top of the search order
 get-order ( addr-n .. addr-n-i .. addr-0 n ) gotchitama ( addr-n .. addr-n-i .. addr-0 n addr-gt) swap 1+ set-order ( <0> )
-
 \ Set current word list to gotchitama
 gotchitama set-current
 
@@ -16,17 +17,17 @@ gotchitama set-current
 object class
    cell var health                     \ health points: 0-100 default: 100
    cell var happiness                  \ happiness points: 0-100 default: 100
-   2 cells var name                       \ pointer to the name of the gotchitama
+   2 cells var name                    \ pointer to the name of the gotchitama
    cell var len                        \ length of the name
    cell var time-of-last-interaction   \ the time of the last interaction with the gotchitama
    cell var birthtime                  \ the time of birth in micro seconds since epoch
-   \ cell var maths                       \ maths skills: 0-100
-   \ cell var happiness
+   cell var cleverness                 \ cleverness points: 0-100 default: 10
    method init ( o -- )                      \ initializes vital values
    method feed ( food o -- )                 \ feeds the gotchitama TODO limit maximum food the gotchitama can get at a time; reduce happiness when feeding all the time
    method play ( o -- )                      \ play with the gotchitama increases happiness by 5 TODO: make it depending on the time since last playing, reduce health while playing
    method get-health ( o -- health )         \ puts the health onto the stack
-   method get-happiness ( o -- happiness )   \ puts the health onto the stack
+   method get-happiness ( o -- happiness )   \ puts the happiness onto the stack
+   method get-cleverness ( o -- cleverness ) \ puts the cleverness onto the stack
    method get-age ( o -- age )               \ puts the age in microseconds onto the stack
    method status ( o -- )                    \ prints status information
 end-class gotchitama
@@ -34,12 +35,15 @@ end-class gotchitama
 \ This word will be compiled into every method
 \ It should alter the variables considering the time since last action
 : update ( o -- o ) >r
-   r@ time-of-last-interaction @ ( now-usec ) get-timestamp dup ( last-usec now-usec now-usec )
-   r@ time-of-last-interaction ! ( last-usec now-usec )
-   swap - dup ( timediff-usec timediff-usec )
-   r@ happiness @ -rot r@ health @ swap ( old-happiness timediff-usec old-health timediff-usec )
-   get-health-diff - ( old-happiness timediff-usec new-health ) r@ health ! ( old-happiness timediff-usec )
-   get-happiness-diff - ( new-happiness ) r@ happiness !
+   r@ time-of-last-interaction @ get-timestamp  ( last-usec now-usec )
+   dup r@ time-of-last-interaction ! ( last-usec now-usec )
+   swap - ( timediff-usec )
+   DEBUG if \ seconds like hours
+      [ 60 60 * ] literal *
+   endif
+   r@ health @ over health-diff - at-least-zero r@ health !
+   r@ happiness @ over happiness-diff - at-least-zero r@ happiness !
+   r@ cleverness @ swap cleverness-diff - at-least-zero r@ cleverness !
    r>
 ;
 
@@ -54,7 +58,9 @@ end-class gotchitama
 
 \ checks whether or not gotchitama is still alive
 : check-pulse ( o -- o ) >r
-   r@ health @ 0 <= if
+   r@ health @ 0 <=
+   r@ happiness @ 0 <=
+   or if
       cr color-red r@ type-name ."  is dead..." font-normal abort
    else
       r>
@@ -70,6 +76,7 @@ end-class gotchitama
 :noname ( addr u o -- ) >r ( )
   100 r@ health ! \ set health
   100 r@ happiness ! \ set happiness
+  10 r@ cleverness ! \ set cleverness
   dup
   r@ len ! \ set name length
   ( addr u ) chars r@ name swap move \ set name
@@ -78,11 +85,20 @@ end-class gotchitama
 ; gotchitama defines init
 
 
-
 \ puts the health on top of the stack
 :method ( o -- health )
    health @ ( health )
 ; gotchitama defines get-health
+
+\ puts the happiness on top of the stack
+:method ( o -- happiness )
+   happiness @ ( happiness )
+; gotchitama defines get-happiness
+
+\ puts the cleverness on top of the stack
+:method ( o -- cleverness )
+   cleverness @ ( cleverness )
+; gotchitama defines get-cleverness
 
 \ puts the age in microseconds on top of the stack
 :method ( o -- age )
@@ -100,12 +116,14 @@ end-class gotchitama
    r@ happiness @ 5 + ( happiness+5 -- ) r> happiness ! ( )
 ; gotchitama defines play
 
+
 \ Print information on the status of the gotchitama
 :method ( o -- ) >r cr
-   ." Name:      " r@ type-name cr
-   ." Health:    " r@ health @ . cr
-   ." Happiness: " r@ happiness @ . cr
-   ." Age:       " get-timestamp r> birthtime @ type-humanfriendly-timedifference
+   ." Name:       " r@ type-name cr
+   ." Health:     " r@ health @ . cr
+   ." Happiness:  " r@ happiness @ . cr
+   ." Cleverness: " r@ cleverness @ . cr
+   ." Age:        " get-timestamp r> birthtime @ type-humanfriendly-timedifference
 ; gotchitama defines status
 
 
@@ -125,13 +143,18 @@ end-class gotchitama
     gotchitama new ( c-addr u o ) dup >R -rot ( o c-addr u | o ) ['] constant ( o c-addr u xt-constant | o ) execute-parsing ( | o ) \ o c-addr u xt-constant execute-parsing == 0 constant <user-input>
     latest ( nt-<user-input> | o ) name>string ( c-addr u | o )
     r@ ( c-addr u o | o ) init \ call init on o
-    R>  log-creation ;
+    R>  log-creation
+;
 
-create-gotchi
+
+
+
+\ create-gotchi
+\ print-avatar
 
 \ just for debugging....
-
-\ cr cr 
-\ gotchitama new constant anton
-\ s" anton" anton init
-\ s" created a new gotchitama named anton" log
+cr cr 
+gotchitama new constant anton
+s" anton" anton init
+anton log-creation
+print-avatar

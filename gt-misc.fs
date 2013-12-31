@@ -1,4 +1,7 @@
 \ gt-misc.fs contains various helper words
+include random.fs
+\ initialize seed
+utime drop here xor utime drop lshift seed !
 
 \ puts the current time in micro seconds onto the data stack
 : get-timestamp ( -- timestamp )
@@ -30,15 +33,15 @@
 \ returns the health reduction for the passed time
 \ 3^((x+9)/9)-2.5, where x is the passed time in hours
 \ use http://www.snappymaria.com/canvas/FunctionPlotter.html for tweaking... pow(3,(x+10)/9)+2.5
-: get-health-diff ( timediff-usec -- diff )
+: health-diff ( timediff-usec -- diff )
    0 ( timediff-usec 0 ) d>f ( |F timediff-usec )
    3e fswap ( |F 3 timediff-usec )
    [ 60 60 1000 1000 * * * ] literal 0 d>f ( |F 3 timediff-usec 1h-usec )
    f/       \ ( |F 3 timediff-hours )
-   9e f+   \ ( |F 3 timediff-hours+9 )
+   9e f+    \ ( |F 3 timediff-hours+9 )
    9e f/    \ ( |F 3 (timediff-hours+9)/9 )
    f**      \ ( |F 3^(timediff-hours+9)/9 )
-   2.5e f-    \ ( |F (3^(timediff-hours+9)/9)+2.5 )
+   2.5e f-  \ ( |F (3^(timediff-hours+9)/9)+2.5 )
    fabs f>d ( health-diff e ) drop ( health-diff )
 ;
 
@@ -46,23 +49,83 @@
 \ returns the happiness reduction for the passed time
 \ 3^((x+9)/15)-1.1, where x is the passed time in hours
 \ use http://www.snappymaria.com/canvas/FunctionPlotter.html for tweaking... pow(3,(x+9)/15)-1.1
-: get-happiness-diff ( timediff-usec -- diff )
+: happiness-diff ( timediff-usec -- diff )
    0 ( timediff-usec 0 ) d>f ( |F timediff-usec )
    3e fswap ( |F 3 timediff-usec )
    [ 60 60 1000 1000 * * * ] literal 0 d>f ( |F 3 timediff-usec 1h-usec )
    f/       \ ( |F 3 timediff-hours )
-   9e f+   \ ( |F 3 timediff-hours+9 )
-   15e f/    \ ( |F 3 (timediff-hours+9)/15 )
+   9e f+    \ ( |F 3 timediff-hours+9 )
+   15e f/   \ ( |F 3 (timediff-hours+9)/15 )
    f**      \ ( |F 3^(timediff-hours+9)/15 )
-   1.1e f-    \ ( |F (3^(timediff-hours+9)/15)-1.1 )
+   1.1e f-  \ ( |F (3^(timediff-hours+9)/15)-1.1 )
    fabs f>d ( health-diff e ) drop ( health-diff )
+;
+
+\ returns the cleverness reduction for the passed time
+\ (x/4)+0.5, where x is the passed time in hours
+\ use http://www.snappymaria.com/canvas/FunctionPlotter.html for tweaking... x/4+0.5
+: cleverness-diff ( timediff-usec -- diff )
+   0 ( timediff-usec 0 ) d>f ( |F timediff-usec )
+   [ 60 60 1000 1000 * * * ] literal 0 d>f ( |F timediff-usec 1h-usec )
+   f/       \ ( |F timediff-hours )
+   4e f/    \ ( |F timediff-hours/4 )
+   0.5e f+  \ ( |F (timediff-hours/4)+0.5 )
+   fabs f>d ( cleverness-diff e ) drop ( cleverness-diff )
+;
+
+\ determine the difference from a number taking cleverness value into account
+: solution-diff ( solution cleverness - solution-diff)
+   
+
+;
+
+\ takes an integer from the stack. if the number was positive, it will remain unchanged and if it is negative it is replaced by 0.
+: at-least-zero ( n -- n/0 )
+   dup 0< if
+      drop 0
+   endif
 ;
 
 \ prints an overview of health and happiness reduction per hour
 : #show-health-happiness-reduction-per-hour cr
-   get-timestamp 1000 ms get-timestamp swap - 60 * 60 * ( 1-hour-usec )
+   get-timestamp 1000 ms get-timestamp swap - [ 60 60 * ] literal * ( 1-hour-usec )
    49 1 do
-      dup i * get-health-diff i . ."  hour(s): -" . ." health and "
-      dup i * get-happiness-diff ." -" . ." happiness" cr
+      dup i * health-diff i . ."  hour(s): -" . ." health and "
+      dup i * happiness-diff ." -" . ." happiness" cr
    loop
 ;
+
+\ prints avatar as ascii art
+: print-avatar
+   ."                                              `                " cr
+   ."      +@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@`" cr
+   ."    ,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@." cr
+   ."   .@@@@,..................,.                            .``   " cr
+   ."   @@@#                                                        " cr
+   ."  ,@@@`                                                        " cr
+   ."  ;@@@                                                   `@@'  " cr
+   ."  #@@#         ;@@@@@+             .+@@@@@#.             ;@@@  " cr
+   ."  #@@#       #@@@@@@@@@+          @@@@@@@@@@#            `@@@  " cr
+   ."  @@@'      @@@@@,.,#@@@@        ;@@@+: .'@@@@           `@@@  " cr
+   ."  @@@'      @@@`      +@:         ,,       ;+`           ;@@@  " cr
+   ."  @@@'                                                   +@@@  " cr
+   ."  @@@;                                                   +@@@  " cr
+   ."  @@@:                                                   @@@,  " cr
+   ."  @@@,                                                   @@@.  " cr
+   ."  @@@,                                                  .@@@`  " cr
+   ."  @@@,                           `+@@@'                 '@@@   " cr
+   ."  @@@,             ;@@,       ;@@@@@@@,                 @@@'   " cr
+   ."  @@@;             #@@@  .;@@@@@@@@+                   '@@@    " cr
+   ."  @@@+              @@@@@@@@@@@#'                     `@@@:    " cr
+   ."  '@@@              ,@@@@@@@:                         @@@@     " cr
+   ."   @@@:                ``                            '@@@.     " cr
+   ."   #@@@                                             ;@@@;      " cr
+   ."   `@@@:                                           +@@@'       " cr
+   ."    +@@@;                                       .#@@@@+        " cr
+   ."     #@@@@#:                                  :@@@@@@.         " cr
+   ."      ,@@@@@@@@@:`                     ``.:#@@@@@@+`           " cr
+   ."         '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,              " cr
+   ."            `,'#@@@@@@@@@@@@@@@@@@@@@@@@@@@#+,                 " cr
+   ."                   `.'''''''':```                              " cr
+;
+
