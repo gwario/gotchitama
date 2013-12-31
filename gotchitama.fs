@@ -25,6 +25,8 @@ object class
    method init ( o -- )                      \ initializes vital values
    method feed ( food o -- )                 \ feeds the gotchitama TODO limit maximum food the gotchitama can get at a time; reduce happiness when feeding all the time
    method play ( o -- )                      \ play with the gotchitama increases happiness by 5 TODO: make it depending on the time since last playing, reduce health while playing
+   method ask-math: ( o -- )                 \ ask for the solution of an integer arith. expression: x o y | o E {+,-,*,/} ^ x E N ^ y E N
+   method tell-math: ( o -- )                \ tells the solution of an arithmetical expression of the from  x o y = z | o E {+,-,*,/} ^ x E N ^ y E N ^ z E N
    method get-health ( o -- health )         \ puts the health onto the stack
    method get-happiness ( o -- happiness )   \ puts the happiness onto the stack
    method get-cleverness ( o -- cleverness ) \ puts the cleverness onto the stack
@@ -108,14 +110,40 @@ end-class gotchitama
 
 \ feeds the gotchitama
 :method ( food o -- ) >r ( food ) 
-   r@ health @ + ( food+health -- ) r> health ! ( )
+   r@ health @ + 100-at-maximum ( food+health -- ) r> health ! ( )
 ; gotchitama defines feed
 
 \ play with the gotchitama
 :method ( o -- ) >r 
-   r@ happiness @ 5 + ( happiness+5 -- ) r> happiness ! ( )
+   r@ happiness @ 5 + 100-at-maximum ( happiness+5 -- ) r> happiness ! ( )
 ; gotchitama defines play
 
+\ asks the gotchitama for the solution of an arithmetical expression of the from  x o y | o E {+,-,*,/} ^ x E N ^ y E N
+:method ( o -- ) >r
+   cr ." Calculating "
+   \ parse from input stream
+   parse-name 2dup type space ( c-addr u ) s>number drop \ drop flag, we need error handling here
+   parse-name 2dup type space ( c-addr u ) find-name ( c-addr u ) name>int ( xt )
+   parse-name 2dup type ( c-addr u ) s>number drop
+   swap ( n1 n2 xt )
+   \ calculate proper solution
+   execute ( proper-solution )
+   \ calculate deviation of gotchitamas solution
+   dup r> cleverness @ ( proper-solution proper-solution cleverness ) solution-diff ( proper-solution solution-diff)
+   \ return solution
+   -
+   cr ."  The answer is " . cr
+; gotchitama defines ask-math:
+
+\ tells the gotchitama the solution of an arithmetical expression of the from  x o y = z | o E {+,-,*,/} ^ x E N ^ y E N ^ z E N
+:method ( o -- ) >r
+   cr ." What should I calculate?" cr
+   \ TODO parse from input stream
+   \ calculate proper solution
+   \ compare given and proper solution
+   \ increase cleverness or reduce cleverness
+   r@ cleverness @ 10 + 100-at-maximum r> cleverness !
+; gotchitama defines tell-math:
 
 \ Print information on the status of the gotchitama
 :method ( o -- ) >r cr
