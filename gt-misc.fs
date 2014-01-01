@@ -75,7 +75,8 @@ utime drop here xor utime drop lshift seed !
 
 \ determine the difference from a number taking cleverness value into account
 : solution-diff ( solution cleverness -- solution-diff)
-   101 swap - dup cr ." deviation of the proper solution [ 0 , " . ." ]%" ( solution 101-cleverness ) random ( solution rnd(0..101-cleverness-1 )
+   color-green
+   101 swap - dup cr ." deviation of the proper solution [ 0 , " 1 - . ." ]%" ( solution 101-cleverness ) random ( solution rnd(0..101-cleverness-1 )
    0 d>f 0 d>f ( |F rnd(0..101-cleverness-1 solution ) 100e f/ ( |F rnd(0..101-cleverness-1 solution-1% )
    f* ( |F solution-rnd(0..100-cleverness-1% )
    1 random if
@@ -84,11 +85,12 @@ utime drop here xor utime drop lshift seed !
    fround
    f>d ( deviation ) drop
    cr ." absolute deviation is " dup .
+   font-normal
    ( +/-deviation )
 ;
 
 \ takes an integer from the stack. if the number is positive, it will remain unchanged and if it is negative it is replaced by 0.
-: at-least-zero ( n -- n/0 )
+: at-least-0 ( n -- n/0 )
    dup 0< if
       drop 0
    endif

@@ -43,9 +43,9 @@ end-class gotchitama
    DEBUG if \ seconds like hours
       [ 60 60 * ] literal *
    endif
-   r@ health @ over health-diff - at-least-zero r@ health !
-   r@ happiness @ over happiness-diff - at-least-zero r@ happiness !
-   r@ cleverness @ swap cleverness-diff - at-least-zero r@ cleverness !
+   r@ health @ over health-diff - at-least-0 r@ health !
+   r@ happiness @ over happiness-diff - at-least-0 r@ happiness !
+   r@ cleverness @ swap cleverness-diff - at-least-0 r@ cleverness !
    r>
 ;
 
@@ -120,29 +120,53 @@ end-class gotchitama
 
 \ asks the gotchitama for the solution of an arithmetical expression of the from  x o y | o E {+,-,*,/} ^ x E N ^ y E N
 :method ( o -- ) >r
-   cr ." Calculating "
    \ parse from input stream
-   parse-name 2dup type space ( c-addr u ) s>number drop \ drop flag, we need error handling here
-   parse-name 2dup type space ( c-addr u ) find-name ( c-addr u ) name>int ( xt )
-   parse-name 2dup type ( c-addr u ) s>number drop
-   swap ( n1 n2 xt )
+   parse-name ( c-addr u ) s>number drop \ drop flag, we need error handling here
+   parse-name ( c-addr u ) find-name ( c-addr u ) name>int ( xt )
+   parse-name ( c-addr u ) s>number drop
+   swap ( x y o-xt )
    \ calculate proper solution
    execute ( proper-solution )
    \ calculate deviation of gotchitamas solution
-   dup r> cleverness @ ( proper-solution proper-solution cleverness ) solution-diff ( proper-solution solution-diff)
+   dup r> cleverness @ dup >r ( proper-solution proper-solution cleverness |R cleverness ) solution-diff ( proper-solution solution-diff |R cleverness)
    \ return solution
-   -
-   cr ."  The answer is " . cr
+   - ( gotchi-solution |R cleverness )
+   cr
+   r@ 90 <= if
+       ." I don't know, maybe " . ." ?"
+   else
+      r@ 90 > r@ 95 <= and if
+         ."  It's " . ." I guess..."
+      else
+         r@ 95 > r@ 99 <= and if
+            ."  I'm pretty sure, it's " . ." !"
+         else
+            ."  An easy one, it's " . ." !"
+         endif
+      endif
+   endif
+   rdrop
 ; gotchitama defines ask-math:
 
 \ tells the gotchitama the solution of an arithmetical expression of the from  x o y = z | o E {+,-,*,/} ^ x E N ^ y E N ^ z E N
 :method ( o -- ) >r
-   cr ." What should I calculate?" cr
-   \ TODO parse from input stream
-   \ calculate proper solution
+   \ parse from input stream
+   parse-name ( c-addr u ) s>number drop \ drop flag, we need error handling here
+   parse-name ( x c-addr u ) find-name ( x c-addr u ) name>int ( x o-xt )
+   parse-name ( x o-xt c-addr u ) s>number drop ( x o-xt y )
+   swap ( x y o-xt )
+   execute ( z' ) \ calculate proper solution
+   parse-name 2drop \ ignore the '='
+   parse-name ( z' c-addr u ) s>number drop ( z' z )
    \ compare given and proper solution
    \ increase cleverness or reduce cleverness
-   r@ cleverness @ 10 + 100-at-maximum r> cleverness !
+   r@ cleverness @ -rot ( cleverness z' z ) .s
+   = if
+      2 + 100-at-maximum
+   else
+      2 - at-least-0
+   endif
+   r> cleverness !
 ; gotchitama defines tell-math:
 
 \ Print information on the status of the gotchitama
