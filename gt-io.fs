@@ -66,7 +66,7 @@
 
 \ SERIALIZATION 
 
-7 cells constant gotchisize \ the size in bytes of gotchitama information that gets serialized
+8 cells constant gotchisize \ the size in bytes of gotchitama information that gets serialized
 Create gotchibuffer gotchisize allot 
 : gotchifile s\" ~/output" ;
 

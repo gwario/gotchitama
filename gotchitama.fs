@@ -2,6 +2,12 @@ require mini-oof.fs
 require gt-io.fs
 require gt-misc.fs
 
+\ TODO
+\ ask-math verändert auch cleverness, happiness
+\ bei play-math: gibt man rechnung nicht selbst ein, sondern wird gefragt (man hat nur X sekunden dafür zeit)
+\ wenn man gewisse schranken bei allen werten übersteigt steigt man in ein hoeheres level auf
+
+
 true constant DEBUG
 
 \ create word list
@@ -135,10 +141,11 @@ end-class gotchitama
    r@ 90 <= if
        ." I don't know, maybe " . ." ?"
    else
-      r@ 90 > r@ 95 <= and if
+   \ r@ 90 > r@ 95 <= and 
+      95 r@ 90 within if
          ."  It's " . ." I guess..."
       else
-         r@ 95 > r@ 99 <= and if
+        99 r@ 95 if \  r@ 95 > r@ 99 <= and if
             ."  I'm pretty sure, it's " . ." !"
          else
             ."  An easy one, it's " . ." !"
@@ -162,9 +169,9 @@ end-class gotchitama
    \ increase cleverness or reduce cleverness
    r@ cleverness @ -rot ( cleverness z' z ) .s
    = if
-      2 + 100-at-maximum
+      20 + 100-at-maximum
    else
-      2 - at-least-0
+      20 - at-least-0
    endif
    r> cleverness !
 ; gotchitama defines tell-math:
