@@ -213,7 +213,4 @@ end-class gotchitama
 
 \ just for debugging....
 cr cr 
-gotchitama new constant anton
-s" anton" anton init
-anton log-creation
 print-avatar
